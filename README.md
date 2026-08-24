@@ -1,8 +1,10 @@
 # Street Recorder
 
-Takes a photo through the rear camera every _N_ metres travelled (100 m by
-default) and saves each one to the device, named after the coordinates where it
-was taken.
+Takes a photo through the rear camera every 100 metres travelled and saves each
+one to the device, named after the coordinates where it was taken.
+
+The interval is fixed in `CAPTURE_INTERVAL_METERS` in
+[src/App.tsx](src/App.tsx); there is no control for it in the UI.
 
 Proof of concept, targeting **Chrome on a phone**.
 

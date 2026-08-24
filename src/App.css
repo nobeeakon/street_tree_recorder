@@ -150,29 +150,6 @@
   background-color: rgb(255 92 92 / 12%);
 }
 
-.interval {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-
-.interval__input {
-  width: 5.5rem;
-  padding: 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  background-color: var(--color-background);
-  color: var(--color-text);
-  font-size: 1rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.interval__input:disabled {
-  opacity: 0.5;
-}
-
 .button {
   padding: 1rem;
   border: none;
@@ -204,7 +181,43 @@
   color: var(--color-text);
 }
 
+.browser-note {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 /* The canvas only exists to encode frames; it is never shown. */
 .capture-canvas {
   display: none;
+}
+
+/* ---------- Landscape ---------- */
+
+/*
+ * Sideways is the position photos are meant to be taken in, and it is also
+ * where vertical space is scarcest. Move the controls into a side column so
+ * the preview keeps the full height of the screen instead of sharing it.
+ */
+@media (orientation: landscape) {
+  .app {
+    flex-direction: row;
+    /* The portrait cap would waste the width the rotation just gained. */
+    max-width: none;
+  }
+
+  .controls {
+    flex: 0 0 clamp(12.5rem, 28%, 17rem);
+    /* A short landscape phone cannot show every control at once. */
+    overflow-y: auto;
+    border-top: none;
+    border-left: 1px solid var(--color-border);
+    padding: 1rem calc(1rem + env(safe-area-inset-right)) 1rem 1rem;
+  }
+
+  .counter__value {
+    font-size: 1.6rem;
+  }
 }

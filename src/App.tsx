@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import './App.css'
 import { useCamera } from './hooks/useCamera'
 import { useDistanceRecorder } from './hooks/useDistanceRecorder'
@@ -7,9 +7,8 @@ import { useIsPortraitOrientation } from './hooks/useIsPortraitOrientation'
 import { captureVideoFrameAsJpeg, downloadBlobAsFile } from './lib/capture'
 import { buildPhotoFileName } from './lib/geo'
 
-const DEFAULT_CAPTURE_INTERVAL_METERS = 100
-const MINIMUM_CAPTURE_INTERVAL_METERS = 10
-const MAXIMUM_CAPTURE_INTERVAL_METERS = 5000
+/** How far the phone must travel before the next photo is taken. */
+const CAPTURE_INTERVAL_METERS = 100
 
 /** Consumer GPS is good to roughly 5-10 m outdoors; anything worse is noise. */
 const MAXIMUM_ACCEPTABLE_ACCURACY_METERS = 25
@@ -20,9 +19,6 @@ function App() {
   const { videoElementRef, isCameraReady, cameraErrorMessage, startCamera } = useCamera()
   const captureCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const isPortraitOrientation = useIsPortraitOrientation()
-  const [captureIntervalMeters, setCaptureIntervalMeters] = useState(
-    DEFAULT_CAPTURE_INTERVAL_METERS,
-  )
 
   const capturePositionAsPhoto = useCallback(
     async (position: CapturePosition) => {
@@ -38,11 +34,11 @@ function App() {
 
   const recorderOptions = useMemo(
     () => ({
-      captureIntervalMeters,
+      captureIntervalMeters: CAPTURE_INTERVAL_METERS,
       maximumAcceptableAccuracyMeters: MAXIMUM_ACCEPTABLE_ACCURACY_METERS,
       onCapturePosition: capturePositionAsPhoto,
     }),
-    [captureIntervalMeters, capturePositionAsPhoto],
+    [capturePositionAsPhoto],
   )
 
   const {
@@ -64,23 +60,10 @@ function App() {
     }
   }, [isRecording, startRecording, stopRecording])
 
-  const handleIntervalChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const parsedInterval = Number.parseInt(event.target.value, 10)
-    if (Number.isNaN(parsedInterval)) {
-      return
-    }
-    setCaptureIntervalMeters(
-      Math.min(
-        MAXIMUM_CAPTURE_INTERVAL_METERS,
-        Math.max(MINIMUM_CAPTURE_INTERVAL_METERS, parsedInterval),
-      ),
-    )
-  }, [])
-
   const progressFraction =
     metersSinceLastPhoto === null
       ? 0
-      : Math.min(1, metersSinceLastPhoto / captureIntervalMeters)
+      : Math.min(1, metersSinceLastPhoto / CAPTURE_INTERVAL_METERS)
 
   return (
     <main className="app">
@@ -143,22 +126,6 @@ function App() {
 
         {errorMessage && <p className="error">{errorMessage}</p>}
 
-        <label className="interval">
-          <span className="interval__label">Hacer una foto cada</span>
-          <input
-            className="interval__input"
-            type="number"
-            inputMode="numeric"
-            min={MINIMUM_CAPTURE_INTERVAL_METERS}
-            max={MAXIMUM_CAPTURE_INTERVAL_METERS}
-            step={10}
-            value={captureIntervalMeters}
-            onChange={handleIntervalChange}
-            disabled={isRecording}
-          />
-          <span className="interval__label">metros</span>
-        </label>
-
         <button
           type="button"
           className={`button ${isRecording ? 'button--stop' : 'button--start'}`}
@@ -167,6 +134,11 @@ function App() {
         >
           {isRecording ? 'Detener grabación' : 'Empezar grabación'}
         </button>
+
+        <p className="browser-note">
+          Una foto cada {CAPTURE_INTERVAL_METERS} m. Usa <strong>Chrome</strong>: es el navegador
+          que permite guardar las fotos automáticamente.
+        </p>
       </section>
 
       {/* Off-screen scratch surface used to encode each frame as a JPEG. */}
