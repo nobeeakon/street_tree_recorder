@@ -34,6 +34,25 @@ The interface is in Spanish; code, comments and this document are in English.
 5. Walk. Photos land in the Downloads folder as
    `40.416775N_003.703790W_20260824T101900Z.jpg`.
 
+## Deploying
+
+Pushing to `main` builds and publishes to GitHub Pages via
+[.github/workflows/deploy.yml](.github/workflows/deploy.yml):
+
+<https://nobeeakon.github.io/street_tree_recorder/>
+
+**One-time setup:** in the repository, go to _Settings → Pages → Build and
+deployment_ and set **Source** to **GitHub Actions**. Without that the workflow
+runs but the deploy step fails.
+
+The workflow lints and type-checks before publishing, so a broken build never
+reaches Pages. `base: './'` in [vite.config.ts](vite.config.ts) keeps asset URLs
+relative, which is what makes the app work from the `/street_tree_recorder/`
+sub-path Pages serves it from.
+
+Pages is HTTPS, so the camera and GPS both work on the deployed site — unlike a
+plain `http://` LAN address.
+
 ## How it works
 
 | File | Responsibility |
