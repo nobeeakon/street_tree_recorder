@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(echo \"--- exit: $? ---\")",
+      "Bash(curl -sk -o /dev/null -w \"%{http_code}\\\\n\" https://localhost:5173/)"
+    ]
+  }
+}

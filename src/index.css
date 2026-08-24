@@ -1,0 +1,32 @@
+:root {
+  --color-background: #0b0f14;
+  --color-surface: #151c24;
+  --color-border: #263140;
+  --color-text: #e8eef5;
+  --color-text-muted: #8ea0b5;
+  --color-accent: #3ddc84;
+  --color-danger: #ff5c5c;
+
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  /* The viewfinder fills the screen; nothing should rubber-band behind it. */
+  overscroll-behavior: none;
+}
