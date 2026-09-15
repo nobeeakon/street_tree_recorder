@@ -72,6 +72,34 @@
   color: var(--color-on-scrim-muted);
 }
 
+/*
+ * Sits on the preview, in the corner nearest the panel it folds. Same treatment
+ * as the photo counter — translucent dark on blur — because it is the other
+ * piece of chrome laid over the camera feed.
+ */
+.viewfinder__controls-toggle {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  /* Thumb-sized like the controls it hides. */
+  min-height: 2.25rem;
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--color-on-scrim);
+  background-color: var(--color-scrim);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+/* Folded, the preview runs to the edge of the screen, and so would the button
+   without room left for the home indicator and the rounded corner. */
+.viewfinder__controls-toggle--alone {
+  right: calc(1rem + env(safe-area-inset-right));
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
 .recording-dot {
   position: absolute;
   top: 1.4rem;
@@ -107,57 +135,11 @@
 }
 
 /*
- * The settings fold away behind this row. On a phone held upright the interval
- * picker and the page links push the viewfinder into the top half of the
- * screen, and they are both things chosen before setting off rather than
- * during the walk — so the row states the interval it hides, and the readout
- * and the record button stay out where a thumb can reach them.
+ * Folded away entirely, not merely emptied: the section is a flex item, and an
+ * empty one would still hold its slot — its height in portrait, its whole
+ * column in landscape — which is the space the preview is being given.
  */
-.controls__summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  width: 100%;
-  /* Thumb-sized like the other controls; this one gets tapped mid-walk. */
-  min-height: 2.5rem;
-  padding: 0.45rem 0.8rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  background-color: var(--color-border);
-  cursor: pointer;
-  text-align: left;
-}
-
-.controls__summary-text strong {
-  color: var(--color-text);
-  font-variant-numeric: tabular-nums;
-}
-
-.controls__summary-chevron {
-  display: inline-block;
-  font-size: 0.6rem;
-  color: var(--color-text-muted);
-  transition: transform 150ms ease-out;
-}
-
-/* Pointing up means "fold this away"; upside down, "bring it back". */
-.controls--collapsed .controls__summary-chevron {
-  transform: rotate(180deg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .controls__summary-chevron {
-    transition: none;
-  }
-}
-
-/* display:none rather than a height animation: it also takes the radios and
-   the links out of the tab order, which a merely invisible panel would not. */
-.controls--collapsed .interval,
-.controls--collapsed .controls__links {
+.controls--collapsed {
   display: none;
 }
 

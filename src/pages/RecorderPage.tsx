@@ -32,12 +32,11 @@ export function RecorderPage() {
     DEFAULT_CAPTURE_INTERVAL_METERS,
   )
   /**
-   * The interval picker and the links to the other pages fold away behind one
-   * summary row. On a phone held upright they are the difference between a
-   * viewfinder that fills the screen and one squeezed into the top half, and
-   * they are only touched between walks.
+   * The whole control panel folds away. On a phone held upright it takes a
+   * third of the screen away from the viewfinder, which is the part of the
+   * page the walk is actually looking at.
    */
-  const [isSettingsExpanded, setIsSettingsExpanded] = useState(true)
+  const [areControlsExpanded, setAreControlsExpanded] = useState(true)
 
   const capturePositionAsPhoto = useCallback(
     async (position: CapturePosition) => {
@@ -90,15 +89,12 @@ export function RecorderPage() {
     if (isRecording) {
       stopRecording()
     } else {
-      // Once the walk starts the settings have been chosen; the screen is worth
-      // more as viewfinder than as a panel of things nobody is about to change.
-      setIsSettingsExpanded(false)
       void startRecording()
     }
   }, [isRecording, startRecording, stopRecording])
 
-  const toggleSettings = useCallback(
-    () => setIsSettingsExpanded(currentlyExpanded => !currentlyExpanded),
+  const toggleControls = useCallback(
+    () => setAreControlsExpanded(currentlyExpanded => !currentlyExpanded),
     [],
   )
 
@@ -161,28 +157,29 @@ export function RecorderPage() {
         </div>
 
         {isRecording && <div className="recording-dot" aria-label="Grabando" />}
-      </div>
 
-      <section className={`controls ${isSettingsExpanded ? '' : 'controls--collapsed'}`}>
-        {/* The summary doubles as the reading of the setting it hides, so the
-            collapsed panel still answers "how often is this shooting?". */}
+        {/* The toggle rides on the preview rather than inside the panel it
+            folds: a handle attached to the panel would keep the panel's slot
+            in the layout, and the point is to give the preview all of it. */}
         <button
           type="button"
-          className="controls__summary"
-          onClick={toggleSettings}
-          aria-expanded={isSettingsExpanded}
-          aria-controls="recorder-settings recorder-links"
+          className={`viewfinder__controls-toggle ${
+            areControlsExpanded ? '' : 'viewfinder__controls-toggle--alone'
+          }`}
+          onClick={toggleControls}
+          aria-expanded={areControlsExpanded}
+          aria-controls="recorder-controls"
         >
-          <span className="controls__summary-text">
-            Una foto cada <strong>{captureIntervalMeters} m</strong>
-          </span>
-          <span className="controls__summary-chevron" aria-hidden="true">
-            ▲
-          </span>
+          {areControlsExpanded ? 'Ocultar controles' : 'Mostrar controles'}
         </button>
+      </div>
 
-        <fieldset className="interval" id="recorder-settings">
-          <legend className="interval__legend">Distancia entre fotos</legend>
+      <section
+        className={`controls ${areControlsExpanded ? '' : 'controls--collapsed'}`}
+        id="recorder-controls"
+      >
+        <fieldset className="interval">
+          <legend className="interval__legend">Una foto cada</legend>
           <div className="interval__options">
             {CAPTURE_INTERVAL_OPTIONS_METERS.map(optionMeters => (
               <label
@@ -231,7 +228,7 @@ export function RecorderPage() {
 
         {/* The other pages are not part of the walk — the labeller is meant for
             a computer — so they get a link rather than a place in the walking UI. */}
-        <nav className="controls__links" id="recorder-links">
+        <nav className="controls__links">
           <Link className="page-link" to={APP_ROUTE_PATHS.labeler}>
             Etiquetar fotos en la computadora →
           </Link>
