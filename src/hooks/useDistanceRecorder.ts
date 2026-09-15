@@ -10,6 +10,8 @@ import type { GeographicCoordinates } from '../lib/geo'
 export interface CapturePosition {
   coordinates: GeographicCoordinates
   accuracyMeters: number
+  /** Metres above sea level, or null when the device cannot work out an altitude. */
+  altitudeMeters: number | null
   capturedAt: Date
 }
 
@@ -132,7 +134,7 @@ export function useDistanceRecorder(options: DistanceRecorderOptions): DistanceR
   )
 
   const handlePosition = useCallback((position: GeolocationPosition) => {
-    const { latitude, longitude, accuracy } = position.coords
+    const { latitude, longitude, accuracy, altitude } = position.coords
     const { captureIntervalMeters, maximumAcceptableAccuracyMeters } = optionsRef.current
 
     setPositionAccuracyMeters(accuracy)
@@ -173,6 +175,7 @@ export function useDistanceRecorder(options: DistanceRecorderOptions): DistanceR
         await optionsRef.current.onCapturePosition({
           coordinates: currentCoordinates,
           accuracyMeters: accuracy,
+          altitudeMeters: altitude,
           capturedAt: new Date(position.timestamp),
         })
         // Only move the anchor once the photo is actually saved, so a failure

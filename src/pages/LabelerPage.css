@@ -1,0 +1,554 @@
+/*
+ * The labelling page. Unlike the recorder, this one is for a desktop browser:
+ * a wide workspace with the photo on the left, the label catalogue on the
+ * right, and the gallery as a strip along the bottom. The page owns the whole
+ * viewport and scrolls internally, so the strip and the toolbar stay put while
+ * stepping through a few hundred photos.
+ */
+
+.labeler {
+  position: relative;
+  display: grid;
+  /* Header, summary, banners and footnote take what they need; the workspace
+     absorbs the rest, and the strip keeps a fixed height at the bottom. */
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  gap: 0.75rem;
+  height: 100dvh;
+  padding: 1rem 1.25rem;
+}
+
+/* ---------- Header ---------- */
+
+.labeler__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.labeler__identity {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.labeler__navigation {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.labeler__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.labeler__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.labeler__summary {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.labeler__summary-hint {
+  color: var(--color-accent);
+}
+
+.labeler__progress {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.labeler__footnote {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.banner__text {
+  min-width: 0;
+}
+
+/* ---------- Workspace ---------- */
+
+.labeler__workspace {
+  display: grid;
+  /* The panel is sized for label names, not for a share of the width, so the
+     photo keeps everything left over on a wide screen. */
+  grid-template-columns: minmax(0, 1fr) clamp(16rem, 24%, 22rem);
+  gap: 1rem;
+  min-height: 0;
+}
+
+/* ---------- Viewer ---------- */
+
+.viewer {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+.viewer--empty {
+  place-items: center;
+  border: 1px dashed var(--color-border);
+  border-radius: 0.75rem;
+}
+
+.viewer__empty-message {
+  max-width: 28rem;
+  margin: 0;
+  padding: 2rem;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.viewer__stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  border-radius: 0.75rem;
+  background-color: #000;
+  overflow: hidden;
+}
+
+.viewer__image {
+  max-width: 100%;
+  max-height: 100%;
+  /* Contain, not cover: judging a tree needs the whole frame, uncropped. */
+  object-fit: contain;
+}
+
+.viewer__step {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 4.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--color-text);
+  background-color: rgb(11 15 20 / 55%);
+  cursor: pointer;
+}
+
+.viewer__step:hover:not(:disabled) {
+  background-color: rgb(11 15 20 / 85%);
+}
+
+.viewer__step:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+.viewer__step--previous {
+  left: 0.5rem;
+}
+
+.viewer__step--next {
+  right: 0.5rem;
+}
+
+.viewer__position {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  margin: 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  background-color: rgb(11 15 20 / 70%);
+}
+
+.viewer__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.viewer__file-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.viewer__metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.5rem;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.viewer__metadata-item {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.viewer__metadata dt {
+  color: var(--color-text-muted);
+}
+
+.viewer__metadata dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.viewer__no-labels {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Label chips ---------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  border: 2px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background-color: var(--color-surface);
+}
+
+.chip--applied {
+  /* The chip is filled with the label's own colour, which is always a light
+     one, so the text flips to the dark background colour. */
+  font-weight: 600;
+  color: #0b0f14;
+}
+
+.chip--applied:hover {
+  filter: brightness(1.1);
+}
+
+.chip__shortcut {
+  padding: 0 0.3rem;
+  border-radius: 0.25rem;
+  font-family: inherit;
+  font-size: 0.7rem;
+  background-color: rgb(127 127 127 / 25%);
+}
+
+/* ---------- Label panel ---------- */
+
+.labels-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background-color: var(--color-surface);
+}
+
+.labels-panel__title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.labels-panel__add {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.labels-panel__empty {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.labels-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* The catalogue can grow past the panel; the photo must not have to shrink. */
+  overflow-y: auto;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.4rem;
+}
+
+.label-row:hover {
+  background-color: var(--color-border);
+}
+
+.label-row__rename {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.label-row__swatch {
+  flex: 0 0 auto;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0.2rem;
+}
+
+.label-row__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.label-row__shortcut {
+  padding: 0 0.3rem;
+  border-radius: 0.25rem;
+  font-family: inherit;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  background-color: rgb(127 127 127 / 20%);
+}
+
+.label-row__count {
+  min-width: 1.5rem;
+  font-size: 0.75rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Gallery strip ---------- */
+
+.gallery {
+  min-height: 0;
+}
+
+.gallery__strip {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0 0 0.3rem;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.gallery__item {
+  flex: 0 0 auto;
+}
+
+.thumbnail {
+  position: relative;
+  display: block;
+  width: 7rem;
+  height: 4.6rem;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 0.4rem;
+  background-color: #000;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.thumbnail--selected {
+  border-color: var(--color-accent);
+}
+
+.thumbnail__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbnail__index {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.25rem;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  text-shadow: 0 0 3px #000;
+}
+
+.thumbnail__dots {
+  position: absolute;
+  right: 0.2rem;
+  bottom: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.15rem 0.25rem;
+  border-radius: 999px;
+  background-color: rgb(11 15 20 / 70%);
+}
+
+.thumbnail__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+}
+
+.thumbnail__more {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Drag and drop ---------- */
+
+.labeler--dropping {
+  outline: 2px dashed var(--color-accent);
+  outline-offset: -0.5rem;
+}
+
+.labeler__drop-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--color-accent);
+  background-color: rgb(11 15 20 / 70%);
+  /* The overlay must not steal the drop event from the page underneath. */
+  pointer-events: none;
+}
+
+/* ---------- Shared controls ---------- */
+
+.text-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.4rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+.text-input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* The recorder's button is sized for a thumb; here it sits in a toolbar. */
+.button--compact {
+  min-height: 2.25rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  color: var(--color-text);
+  background-color: var(--color-border);
+}
+
+.icon-button--danger:hover {
+  color: var(--color-danger);
+}
+
+.hint--warning {
+  color: var(--color-danger);
+  background-color: rgb(255 92 92 / 12%);
+}
+
+/* Present for screen readers, absent from the layout. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ---------- Narrow screens ---------- */
+
+/*
+ * The page is meant for a computer, but a laptop in a split window is narrow
+ * enough to need the panel under the photo rather than beside it.
+ */
+@media (width <= 60rem) {
+  .labeler {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .labeler__workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .viewer__stage {
+    height: 60vh;
+  }
+}

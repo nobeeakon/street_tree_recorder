@@ -1,0 +1,80 @@
+/*
+ * The only page of the app that is plain prose. It has to read on the phone the
+ * recorder runs on and on the computer the labeller runs on, so it is a single
+ * measured column that scrolls, with nothing pinned to the viewport.
+ */
+
+.about {
+  min-height: 100dvh;
+  padding: 2rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.about__content {
+  /* Around 70 characters per line, which is where prose stays readable. */
+  max-width: 38rem;
+  margin: 0 auto;
+}
+
+.about__header {
+  margin-bottom: 2rem;
+}
+
+.about__title {
+  margin: 0 0 0.6rem;
+  font-size: 1.5rem;
+}
+
+.about__lead {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.about__section {
+  margin-bottom: 1.75rem;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.about__section-title {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  color: var(--color-accent);
+}
+
+.about__definitions {
+  margin: 0;
+}
+
+.about__definitions dt {
+  font-weight: 600;
+}
+
+.about__definitions dd {
+  margin: 0.2rem 0 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.about__definitions dd:last-child {
+  margin-bottom: 0;
+}
+
+.about__footer {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.about__navigation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.about__source {
+  margin: 1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
