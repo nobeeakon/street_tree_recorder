@@ -13,7 +13,7 @@
   position: relative;
   flex: 1;
   min-height: 0;
-  background-color: #000;
+  background-color: var(--color-media-surface);
   overflow: hidden;
 }
 
@@ -35,12 +35,14 @@
   gap: 1rem;
   padding: 1.5rem;
   text-align: center;
-  background-color: rgb(11 15 20 / 85%);
+  color: var(--color-on-scrim);
+  background-color: var(--color-scrim-strong);
 }
 
 .viewfinder__message {
   margin: 0;
-  color: var(--color-text-muted);
+  /* Sits on the scrim over the camera feed, not on the page. */
+  color: var(--color-on-scrim-muted);
   line-height: 1.5;
 }
 
@@ -53,7 +55,8 @@
   gap: 0.4rem;
   padding: 0.5rem 0.9rem;
   border-radius: 999px;
-  background-color: rgb(11 15 20 / 70%);
+  color: var(--color-on-scrim);
+  background-color: var(--color-scrim);
   backdrop-filter: blur(6px);
 }
 
@@ -66,7 +69,7 @@
 
 .counter__label {
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  color: var(--color-on-scrim-muted);
 }
 
 .recording-dot {
@@ -136,7 +139,8 @@
   border-radius: 0.5rem;
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted);
+  /* Full-strength ink: the muted grey does not carry against the grey pill. */
+  color: var(--color-text);
   background-color: var(--color-border);
   cursor: pointer;
   /* A quick double tap would otherwise select the label text instead. */
@@ -145,7 +149,7 @@
 
 .interval__option--selected {
   font-weight: 600;
-  color: #0b0f14;
+  color: var(--color-on-accent);
   background-color: var(--color-accent);
 }
 
@@ -198,7 +202,7 @@
   font-size: 0.85rem;
   line-height: 1.4;
   color: var(--color-accent);
-  background-color: rgb(61 220 132 / 12%);
+  background-color: var(--color-accent-soft);
 }
 
 .error {
@@ -207,7 +211,7 @@
   border-radius: 0.5rem;
   font-size: 0.85rem;
   color: var(--color-danger);
-  background-color: rgb(255 92 92 / 12%);
+  background-color: var(--color-danger-soft);
 }
 
 .button {
@@ -216,7 +220,7 @@
   border-radius: 0.75rem;
   font-size: 1.05rem;
   font-weight: 600;
-  color: #0b0f14;
+  color: var(--color-on-accent);
   cursor: pointer;
   /* Comfortable target for a thumb while walking. */
   min-height: 3.25rem;
@@ -233,7 +237,7 @@
 
 .button--stop {
   background-color: var(--color-danger);
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .button--secondary {
@@ -285,7 +289,7 @@
 }
 
 .notice::backdrop {
-  background-color: rgb(11 15 20 / 75%);
+  background-color: var(--color-scrim);
 }
 
 .notice__title {

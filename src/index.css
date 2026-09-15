@@ -1,13 +1,35 @@
+/*
+ * One palette, light only. `color-scheme: light` also settles the form controls,
+ * the scrollbars and the browser's own UI, so a phone in dark mode still gets
+ * the light interface rather than an inverted half of one.
+ *
+ * Two pairs of variables exist because a colour's *opposite* is not always the
+ * page text: `--color-on-accent` is what goes on top of an accent fill, and
+ * `--color-on-scrim` what goes on top of the dark veils over a photo. Those
+ * veils stay dark in a light interface on purpose — what is behind them is
+ * camera pixels, not page background.
+ */
 :root {
-  --color-background: #0b0f14;
-  --color-surface: #151c24;
-  --color-border: #263140;
-  --color-text: #e8eef5;
-  --color-text-muted: #8ea0b5;
-  --color-accent: #3ddc84;
-  --color-danger: #ff5c5c;
+  --color-background: #f5f7f9;
+  --color-surface: #ffffff;
+  --color-border: #d7dee6;
+  --color-text: #17202b;
+  --color-text-muted: #5b6876;
+  /* Dark enough to read as text on the light background, not just as a fill. */
+  --color-accent: #0e7a46;
+  --color-accent-soft: rgb(14 122 70 / 10%);
+  --color-on-accent: #ffffff;
+  --color-danger: #c62828;
+  --color-danger-soft: rgb(198 40 40 / 10%);
+  --color-on-scrim: #ffffff;
+  --color-on-scrim-muted: rgb(255 255 255 / 72%);
+  --color-scrim: rgb(17 22 28 / 65%);
+  --color-scrim-strong: rgb(17 22 28 / 85%);
+  /* Behind a photo or a video frame: neutral, and darker than the page so the
+     edges of a bright picture are still visible against it. */
+  --color-media-surface: #dfe5ec;
 
-  color-scheme: dark;
+  color-scheme: light;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;

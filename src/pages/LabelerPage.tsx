@@ -3,12 +3,14 @@ import type { ChangeEvent, DragEvent } from 'react'
 import { Link } from 'react-router'
 import './LabelerPage.css'
 import { LabelManagerPanel } from '../components/labeler/LabelManagerPanel'
-import { PhotoGalleryStrip } from '../components/labeler/PhotoGalleryStrip'
+import { PhotoFullScreenDialog } from '../components/labeler/PhotoFullScreenDialog'
+import { PhotoGalleryDialog } from '../components/labeler/PhotoGalleryDialog'
 import { PhotoViewer } from '../components/labeler/PhotoViewer'
 import { useAnnotationStore } from '../hooks/useAnnotationStore'
 import { usePhotoGallery } from '../hooks/usePhotoGallery'
 import { buildAnnotationsCsv, buildAnnotationsCsvFileName } from '../lib/annotationCsv'
 import { downloadBlobAsFile } from '../lib/capture'
+import { MAXIMUM_KEYBOARD_SHORTCUT_LABELS } from '../lib/labelShortcuts'
 import { toPhotoRegistration } from '../lib/photoLibrary'
 import { APP_ROUTE_PATHS } from '../routePaths'
 
@@ -26,14 +28,13 @@ import { APP_ROUTE_PATHS } from '../routePaths'
  * enough to judge a tree on.
  */
 
-/** Only the first nine labels get a digit shortcut; there are only nine keys. */
-const MAXIMUM_KEYBOARD_SHORTCUT_LABELS = 9
-
 export function LabelerPage() {
   const store = useAnnotationStore()
   const gallery = usePhotoGallery()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isDraggingFiles, setIsDraggingFiles] = useState(false)
+  const [isGalleryDialogOpen, setIsGalleryDialogOpen] = useState(false)
+  const [isFullScreenOpen, setIsFullScreenOpen] = useState(false)
 
   const {
     photos,
@@ -94,6 +95,10 @@ export function LabelerPage() {
     }
   }, [])
 
+  const closeGalleryDialog = useCallback(() => setIsGalleryDialogOpen(false), [])
+  const openFullScreen = useCallback(() => setIsFullScreenOpen(true), [])
+  const closeFullScreen = useCallback(() => setIsFullScreenOpen(false), [])
+
   const handleExportCsv = useCallback(() => {
     const csvContent = buildAnnotationsCsv(store.database)
     const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
@@ -119,6 +124,12 @@ export function LabelerPage() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) {
+        return
+      }
+
+      // The gallery is modal: while it is open the keys belong to it, not to the
+      // photo hidden behind it. Esc closing the dialog must not also tag anything.
+      if (isGalleryDialogOpen) {
         return
       }
 
@@ -154,7 +165,14 @@ export function LabelerPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [goToNextPhoto, goToPreviousPhoto, labels, selectedPhoto, toggleLabelOnPhoto])
+  }, [
+    goToNextPhoto,
+    goToPreviousPhoto,
+    isGalleryDialogOpen,
+    labels,
+    selectedPhoto,
+    toggleLabelOnPhoto,
+  ])
 
   const handleToggleLabelOnSelectedPhoto = useCallback(
     (labelId: string) => {
@@ -203,6 +221,15 @@ export function LabelerPage() {
             disabled={loadingProgress !== null}
           >
             {loadingProgress === null ? 'Agregar fotos' : 'Leyendo…'}
+          </button>
+          <button
+            type="button"
+            className="button button--compact button--secondary"
+            onClick={() => setIsGalleryDialogOpen(true)}
+            disabled={photos.length === 0}
+            title="Abre la galería para saltar a otra foto"
+          >
+            Ver galería ({photos.length})
           </button>
           <button
             type="button"
@@ -279,6 +306,7 @@ export function LabelerPage() {
           onToggleLabel={handleToggleLabelOnSelectedPhoto}
           onGoToPreviousPhoto={goToPreviousPhoto}
           onGoToNextPhoto={goToNextPhoto}
+          onOpenFullScreen={openFullScreen}
         />
 
         <LabelManagerPanel
@@ -290,19 +318,28 @@ export function LabelerPage() {
         />
       </div>
 
-      <PhotoGalleryStrip
+      <PhotoGalleryDialog
+        isOpen={isGalleryDialogOpen}
         photos={photos}
         annotationsByPhotoKey={store.annotationsByPhotoKey}
         labels={labels}
         selectedPhotoIndex={selectedPhotoIndex}
         onSelectPhotoAtIndex={selectPhotoAtIndex}
+        onClose={closeGalleryDialog}
       />
 
-      <p className="labeler__footnote">
-        Las fotos se leen en esta computadora y no salen de ella. Las etiquetas y las coordenadas se
-        guardan en este navegador, así que al volver a abrir una foto ya analizada aparecerán sus
-        etiquetas. La galería, en cambio, se vacía al recargar la página.
-      </p>
+      <PhotoFullScreenDialog
+        isOpen={isFullScreenOpen}
+        photo={selectedPhoto}
+        annotation={selectedPhoto ? store.annotationsByPhotoKey[selectedPhoto.photoKey] : undefined}
+        labels={labels}
+        photoNumber={selectedPhotoIndex + 1}
+        photoCount={photos.length}
+        onToggleLabel={handleToggleLabelOnSelectedPhoto}
+        onGoToPreviousPhoto={goToPreviousPhoto}
+        onGoToNextPhoto={goToNextPhoto}
+        onClose={closeFullScreen}
+      />
 
       {isDraggingFiles && <div className="labeler__drop-overlay">Suelta las fotos aquí</div>}
     </main>

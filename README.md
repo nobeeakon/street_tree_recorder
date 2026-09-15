@@ -24,6 +24,14 @@ reader, the gallery and the store off the phone that only records.
 
 Proof of concept, targeting **Chrome**.
 
+The interface is light only. The palette is a handful of CSS variables in
+[src/index.css](src/index.css), and `color-scheme: light` there keeps a phone in
+dark mode from inverting the form controls and scrollbars. Two of those
+variables exist because a colour's opposite is not always the page text:
+`--color-on-accent` is what sits on an accent fill, and `--color-on-scrim` what
+sits on the dark veils over the camera feed and the photo stage — those stay
+dark in a light interface because what is behind them is picture, not page.
+
 ## Running it
 
 ```bash

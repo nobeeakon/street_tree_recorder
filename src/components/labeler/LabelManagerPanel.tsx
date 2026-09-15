@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { LabelDefinition } from '../../lib/annotationStore'
 import { labelColorAt } from '../../lib/labelColors'
+import { keyboardShortcutForLabelIndex } from '../../lib/labelShortcuts'
 
 /**
  * The label catalogue: the vocabulary of the survey, shared by every photo and
@@ -134,10 +135,9 @@ export function LabelManagerPanel({
                     aria-hidden="true"
                   />
                   <span className="label-row__name">{label.name}</span>
-                  {/* Only the first nine get a shortcut; there are only nine digit keys. */}
-                  {labelIndex < 9 && (
+                  {keyboardShortcutForLabelIndex(labelIndex) !== null && (
                     <kbd className="label-row__shortcut" title="Atajo de teclado">
-                      {labelIndex + 1}
+                      {keyboardShortcutForLabelIndex(labelIndex)}
                     </kbd>
                   )}
                   <span className="label-row__count" title="Fotos con esta etiqueta">

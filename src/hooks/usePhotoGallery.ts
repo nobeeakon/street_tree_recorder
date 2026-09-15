@@ -39,18 +39,26 @@ function isImageFile(file: File): boolean {
   return file.type.startsWith('image/') || IMAGE_FILE_EXTENSION_PATTERN.test(file.name)
 }
 
+/**
+ * What to say after a batch of files, or `null` when there is nothing worth a
+ * banner.
+ *
+ * A load that went as asked says nothing. How many photos are in the gallery is
+ * already on the page — in the summary line and on the gallery button — and a
+ * banner repeating it pushed the photo itself down the screen to announce a
+ * success the user just watched happen. Only what was *not* asked for — repeats,
+ * non-images, files that would not read — earns the space.
+ */
 function buildLoadSummary(
-  addedCount: number,
   duplicateCount: number,
   skippedCount: number,
   failureMessages: readonly string[],
 ): string | null {
   const parts: string[] = []
-  if (addedCount > 0) {
-    parts.push(`${addedCount} ${addedCount === 1 ? 'foto agregada' : 'fotos agregadas'}`)
-  }
   if (duplicateCount > 0) {
-    parts.push(`${duplicateCount} ${duplicateCount === 1 ? 'repetida' : 'repetidas'} (ya estaban en la galería)`)
+    parts.push(
+      `${duplicateCount} ${duplicateCount === 1 ? 'foto repetida que ya estaba' : 'fotos repetidas que ya estaban'} en la galería`,
+    )
   }
   if (skippedCount > 0) {
     parts.push(`${skippedCount} ${skippedCount === 1 ? 'archivo omitido' : 'archivos omitidos'} por no ser imágenes`)
@@ -97,7 +105,7 @@ export function usePhotoGallery(): PhotoGalleryController {
     const skippedCount = files.length - imageFiles.length
 
     if (imageFiles.length === 0) {
-      setGalleryNoticeMessage(buildLoadSummary(0, 0, skippedCount, []))
+      setGalleryNoticeMessage(buildLoadSummary(0, skippedCount, []))
       return []
     }
 
@@ -132,7 +140,7 @@ export function usePhotoGallery(): PhotoGalleryController {
 
     isLoadingRef.current = false
     setLoadingProgress(null)
-    setGalleryNoticeMessage(buildLoadSummary(addedPhotos.length, duplicateCount, skippedCount, failureMessages))
+    setGalleryNoticeMessage(buildLoadSummary(duplicateCount, skippedCount, failureMessages))
 
     if (addedPhotos.length > 0) {
       const previousPhotoCount = photosRef.current.length

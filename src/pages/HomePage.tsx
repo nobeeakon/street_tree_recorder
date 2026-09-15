@@ -64,6 +64,12 @@ export function HomePage() {
               también dentro del archivo, en los metadatos EXIF. Se pueden compartir por WhatsApp o
               cualquier otro medio.
             </dd>
+                    <dt>Compartir via Whatsapp</dt>
+            <dd>
+              La imagen debe mantener toda la información para que la app funcione correctamente. 
+              Comparte las imagenes como DOCUMENTO, no como imagen. Otra alternativa es 
+              compartir las imagenes compactadas en un archivo zip.
+            </dd>
             <dt>Etiquetar</dt>
             <dd>
               En la computadora se vuelven a abrir esas fotos, se les ponen etiquetas de un catálogo

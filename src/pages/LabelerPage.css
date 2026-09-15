@@ -1,17 +1,18 @@
 /*
  * The labelling page. Unlike the recorder, this one is for a desktop browser:
- * a wide workspace with the photo on the left, the label catalogue on the
- * right, and the gallery as a strip along the bottom. The page owns the whole
- * viewport and scrolls internally, so the strip and the toolbar stay put while
- * stepping through a few hundred photos.
+ * a wide workspace with the photo on the left and the label catalogue on the
+ * right. The page owns the whole viewport and never scrolls as a whole, so the
+ * toolbar stays put while stepping through a few hundred photos; the gallery
+ * of every photo in the session opens over it as a dialog.
  */
 
 .labeler {
   position: relative;
-  display: grid;
-  /* Header, summary, banners and footnote take what they need; the workspace
-     absorbs the rest, and the strip keeps a fixed height at the bottom. */
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  /* A column rather than a row template: the progress line and the two banners
+     come and go, and only the workspace should ever absorb the leftover height
+     however many of them happen to be on screen. */
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
   height: 100dvh;
   padding: 1rem 1.25rem;
@@ -68,13 +69,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.labeler__footnote {
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.5;
-  color: var(--color-text-muted);
-}
-
 .banner {
   display: flex;
   align-items: center;
@@ -89,6 +83,7 @@
 /* ---------- Workspace ---------- */
 
 .labeler__workspace {
+  flex: 1;
   display: grid;
   /* The panel is sized for label names, not for a share of the width, so the
      photo keeps everything left over on a wide screen. */
@@ -101,7 +96,9 @@
 
 .viewer {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  /* Label bar, photo, metadata. The photo is the only row that gives way when
+     the window is short; the buttons must never be the thing that gets cut. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.75rem;
   min-height: 0;
 }
@@ -128,7 +125,7 @@
   justify-content: center;
   min-height: 0;
   border-radius: 0.75rem;
-  background-color: #000;
+  background-color: var(--color-media-surface);
   overflow: hidden;
 }
 
@@ -152,13 +149,13 @@
   border-radius: 0.5rem;
   font-size: 2rem;
   line-height: 1;
-  color: var(--color-text);
-  background-color: rgb(11 15 20 / 55%);
+  color: var(--color-on-scrim);
+  background-color: var(--color-scrim);
   cursor: pointer;
 }
 
 .viewer__step:hover:not(:disabled) {
-  background-color: rgb(11 15 20 / 85%);
+  background-color: var(--color-scrim-strong);
 }
 
 .viewer__step:disabled {
@@ -174,6 +171,32 @@
   right: 0.5rem;
 }
 
+.viewer__expand {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border: none;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--color-on-scrim);
+  background-color: var(--color-scrim);
+  cursor: pointer;
+}
+
+.viewer__expand:hover {
+  background-color: var(--color-scrim-strong);
+}
+
+.viewer__expand:focus-visible {
+  outline: 2px solid var(--color-on-scrim);
+  outline-offset: 2px;
+}
+
 .viewer__position {
   position: absolute;
   right: 0.75rem;
@@ -183,19 +206,33 @@
   border-radius: 999px;
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
-  background-color: rgb(11 15 20 / 70%);
+  color: var(--color-on-scrim);
+  background-color: var(--color-scrim);
 }
 
 .viewer__details {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.4rem;
+}
+
+/* File name and Exif on one line: a caption for the photo, not a section of
+   the page. It wraps only when the window is too narrow to hold it. */
+.viewer__identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.1rem 0.6rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
 }
 
 .viewer__file-name {
-  margin: 0;
-  font-size: 0.95rem;
+  /* Long enough for the coordinates in the generated names, short enough to
+     leave the Exif on the same line. */
+  max-width: 24rem;
   font-weight: 600;
+  color: var(--color-text);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -204,18 +241,21 @@
 .viewer__metadata {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 1.5rem;
+  align-items: baseline;
+  gap: 0.1rem 0.6rem;
   margin: 0;
-  font-size: 0.8rem;
 }
 
 .viewer__metadata-item {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
-.viewer__metadata dt {
-  color: var(--color-text-muted);
+/* The terms are for screen readers only, so the values need their own
+   separator to stay readable as a run-on line. */
+.viewer__metadata-item + .viewer__metadata-item::before {
+  content: '·';
+  color: var(--color-border);
 }
 
 .viewer__metadata dd {
@@ -223,9 +263,40 @@
   font-variant-numeric: tabular-nums;
 }
 
-.viewer__no-labels {
+/* ---------- Label bar ---------- */
+
+/*
+ * The one control surface of the page, so it is drawn as one: a card sitting
+ * directly above the photo, captioned with what it is for. Without the card the
+ * chips floated loose on the page background and read as a legend of the photo
+ * rather than as the thing you click.
+ */
+.label-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background-color: var(--color-surface);
+}
+
+.label-bar__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+
+.label-bar__title {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+}
+
+.label-bar__hint,
+.label-bar__empty {
+  margin: 0;
+  font-size: 0.8rem;
   color: var(--color-text-muted);
 }
 
@@ -234,35 +305,88 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.75rem;
+  gap: 0.45rem;
+  /* Deliberately the size of a real button, not of a tag: this is the control
+     used hundreds of times in a session and it has to invite the pointer. */
+  min-height: 2.25rem;
+  padding: 0.4rem 0.8rem 0.4rem 0.5rem;
   border: 2px solid var(--color-border);
   border-radius: 999px;
+  font: inherit;
   font-size: 0.9rem;
   color: var(--color-text);
-  background-color: transparent;
+  background-color: var(--color-background);
+  box-shadow: 0 1px 2px rgb(17 22 28 / 12%);
   cursor: pointer;
 }
 
 .chip:hover {
   background-color: var(--color-surface);
+  box-shadow: 0 2px 6px rgb(17 22 28 / 18%);
+}
+
+/* Pressing pushes the button down, so a click on an already-applied label —
+   which changes little else on screen — still feels like it landed. */
+.chip:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .chip--applied {
-  /* The chip is filled with the label's own colour, which is always a light
-     one, so the text flips to the dark background colour. */
+  /* The chip is filled with the label's own colour, a pastel from the palette,
+     so its text is the dark ink rather than the page's own text colour. */
   font-weight: 600;
-  color: #0b0f14;
+  color: #17202b;
 }
 
 .chip--applied:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.05);
+}
+
+/*
+ * The on/off box. It carries the label's colour as its border even when empty,
+ * which is what tells you at a glance that the chip is a switch with a state
+ * rather than a coloured word.
+ */
+.chip__state {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid;
+  /* Takes the inline colour the button was given for its own border. */
+  border-color: inherit;
+  border-radius: 0.3rem;
+  font-size: 0.8rem;
+  line-height: 1;
+  background-color: var(--color-surface);
+}
+
+.chip--applied .chip__state {
+  color: #17202b;
+  border-color: rgb(23 32 43 / 45%);
+  background-color: rgb(255 255 255 / 70%);
+}
+
+/* A long label name must not push the shortcut key off the chip. */
+.chip__name {
+  max-width: 14rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .chip__shortcut {
@@ -270,7 +394,7 @@
   border-radius: 0.25rem;
   font-family: inherit;
   font-size: 0.7rem;
-  background-color: rgb(127 127 127 / 25%);
+  background-color: rgb(91 104 118 / 18%);
 }
 
 /* ---------- Label panel ---------- */
@@ -338,6 +462,8 @@
   width: 0.8rem;
   height: 0.8rem;
   border-radius: 0.2rem;
+  /* The palette is pastel, so a swatch needs an edge to show up on white. */
+  border: 1px solid var(--color-border);
 }
 
 .label-row__name {
@@ -355,7 +481,7 @@
   font-family: inherit;
   font-size: 0.7rem;
   color: var(--color-text-muted);
-  background-color: rgb(127 127 127 / 20%);
+  background-color: rgb(91 104 118 / 15%);
 }
 
 .label-row__count {
@@ -366,81 +492,285 @@
   color: var(--color-text-muted);
 }
 
-/* ---------- Gallery strip ---------- */
+/* ---------- Full-screen photo ---------- */
 
-.gallery {
-  min-height: 0;
-}
-
-.gallery__strip {
+/* See the note on `.gallery-dialog[open]`: an author `display` on the bare
+   element would keep the dialog on screen for good. */
+.full-screen[open] {
   display: flex;
-  gap: 0.4rem;
+  flex-direction: column;
+}
+
+.full-screen {
+  /* Stated rather than inherited from the user agent, which positions dialogs
+     differently across versions; this one has to cover the window exactly. */
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  gap: 0.6rem;
   margin: 0;
-  padding: 0 0 0.3rem;
-  list-style: none;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.gallery__item {
-  flex: 0 0 auto;
-}
-
-.thumbnail {
-  position: relative;
-  display: block;
-  width: 7rem;
-  height: 4.6rem;
   padding: 0;
-  border: 2px solid transparent;
-  border-radius: 0.4rem;
-  background-color: #000;
-  cursor: pointer;
+  border: none;
+  /* Dark, like the scrim over a photo: what is behind the chrome here is
+     camera pixels, and a light page around them would skew how they read. */
+  color: var(--color-on-scrim);
+  background-color: #11161c;
   overflow: hidden;
 }
 
-.thumbnail--selected {
-  border-color: var(--color-accent);
+.full-screen::backdrop {
+  background-color: #11161c;
 }
 
-.thumbnail__image {
+.full-screen__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem 0;
+}
+
+.full-screen__file-name {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.85rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.full-screen__position {
+  margin: 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-scrim-muted);
+}
+
+.full-screen__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.3rem;
+  font: inherit;
+  color: var(--color-on-scrim);
+  background-color: rgb(255 255 255 / 12%);
+  cursor: pointer;
+}
+
+.full-screen__close:hover {
+  background-color: rgb(255 255 255 / 24%);
+}
+
+.full-screen__labels {
+  display: flex;
+  justify-content: center;
+  padding: 0 0.9rem;
+  /* A long catalogue must not eat the photo; past a couple of rows it scrolls. */
+  max-height: 22vh;
+  overflow-y: auto;
+}
+
+.full-screen__labels .chips {
+  justify-content: center;
+}
+
+.full-screen__stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 0 0 0.9rem;
+}
+
+.full-screen__image {
+  max-width: 100%;
+  max-height: 100%;
+  /* Contain, not cover: judging a tree needs the whole frame, uncropped. */
+  object-fit: contain;
+}
+
+/* The steps are reused from the page, where they sit on a light surface; over
+   the dark backdrop the scrim they carry would be all but invisible. */
+.full-screen .viewer__step {
+  background-color: rgb(255 255 255 / 14%);
+}
+
+.full-screen .viewer__step:hover:not(:disabled) {
+  background-color: rgb(255 255 255 / 26%);
+}
+
+/* ---------- Gallery dialog ---------- */
+
+/*
+ * The `[open]` is load-bearing, not decoration. A closed dialog is hidden by
+ * `dialog:not([open]) { display: none }` in the user-agent stylesheet, and any
+ * author `display` beats the user agent whatever its specificity — so styling
+ * the bare `.gallery-dialog` as a flex column left it on screen permanently and
+ * made close() look broken.
+ */
+.gallery-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.gallery-dialog {
+  gap: 0.75rem;
+  /* Nearly the whole window: the point of opening it is to see many photos at
+     once, which a dialog sized to its content would not give. */
+  width: min(72rem, 92vw);
+  max-height: 88dvh;
+  margin: auto;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  overflow: hidden;
+}
+
+.gallery-dialog::backdrop {
+  background-color: var(--color-scrim);
+}
+
+.gallery-dialog__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.gallery-dialog__title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.gallery-dialog__count {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.gallery-dialog__close {
+  margin-left: auto;
+}
+
+.gallery-dialog__empty {
+  margin: 0;
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.gallery-dialog__grid {
+  display: grid;
+  /* Cards, not a fixed count: a wide window shows more of the walk per row. */
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* ---------- Photo card ---------- */
+
+.photo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.35rem;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  font: inherit;
+  text-align: left;
+  color: var(--color-text);
+  background-color: var(--color-background);
+  cursor: pointer;
+}
+
+.photo-card:hover {
+  border-color: var(--color-border);
+}
+
+.photo-card:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.photo-card--selected {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent-soft);
+}
+
+.photo-card__frame {
+  position: relative;
+  display: block;
+  /* A fixed ratio keeps the rows aligned whichever way the photos were held. */
+  aspect-ratio: 4 / 3;
+  border-radius: 0.35rem;
+  background-color: var(--color-media-surface);
+  overflow: hidden;
+}
+
+.photo-card__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.thumbnail__index {
+.photo-card__index {
   position: absolute;
   top: 0.15rem;
-  left: 0.25rem;
+  left: 0.3rem;
   font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
-  color: var(--color-text);
-  text-shadow: 0 0 3px #000;
+  /* Over the photo itself, which can be any colour. */
+  color: var(--color-on-scrim);
+  text-shadow: 0 0 3px rgb(17 22 28 / 90%);
 }
 
-.thumbnail__dots {
+.photo-card__dots {
   position: absolute;
-  right: 0.2rem;
-  bottom: 0.2rem;
+  right: 0.25rem;
+  bottom: 0.25rem;
   display: flex;
   align-items: center;
   gap: 0.15rem;
-  padding: 0.15rem 0.25rem;
+  padding: 0.15rem 0.3rem;
   border-radius: 999px;
-  background-color: rgb(11 15 20 / 70%);
+  background-color: var(--color-scrim);
 }
 
-.thumbnail__dot {
+.photo-card__dot {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
 }
 
-.thumbnail__more {
+.photo-card__more {
   font-size: 0.6rem;
+  color: var(--color-on-scrim-muted);
+}
+
+.photo-card__name {
+  font-size: 0.68rem;
   color: var(--color-text-muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* ---------- Drag and drop ---------- */
@@ -458,7 +788,7 @@
   justify-content: center;
   font-size: 1.2rem;
   color: var(--color-accent);
-  background-color: rgb(11 15 20 / 70%);
+  background-color: rgb(245 247 249 / 85%);
   /* The overlay must not steal the drop event from the page underneath. */
   pointer-events: none;
 }
@@ -516,7 +846,7 @@
 
 .hint--warning {
   color: var(--color-danger);
-  background-color: rgb(255 92 92 / 12%);
+  background-color: var(--color-danger-soft);
 }
 
 /* Present for screen readers, absent from the layout. */

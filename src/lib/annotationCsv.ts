@@ -6,12 +6,20 @@
  * that were opened and left unlabelled, which is itself survey data ("this spot
  * was looked at, and there was nothing to record").
  *
+ * The shape is one column per label rather than a list of names in a single
+ * cell: a spreadsheet filters, counts and pivots a `si`/`no` column directly,
+ * and every label in the catalogue gets a column even if no photo carries it, so
+ * the columns are the same from one export to the next. Internal identifiers
+ * (label ids, the photo's content hash) are deliberately left out — they mean
+ * nothing outside this app, and the file name identifies the photo for whoever
+ * reads the survey.
+ *
  * RFC 4180 formatting: CRLF line endings, quotes doubled inside quoted fields.
  * A UTF-8 byte order mark leads the file because Excel otherwise reads accented
  * label names as mojibake, and these labels are in Spanish.
  */
 
-import type { AnnotationDatabase, PhotoAnnotation } from './annotationStore'
+import type { AnnotationDatabase, LabelDefinition, PhotoAnnotation } from './annotationStore'
 import { formatTimestampForFileName } from './geo'
 
 const CSV_LINE_SEPARATOR = '\r\n'
@@ -21,19 +29,11 @@ const UTF8_BYTE_ORDER_MARK = '﻿'
 /** Matching the six decimals the recorder writes into the file names. */
 const COORDINATE_DECIMAL_PLACES = 6
 
-const CSV_COLUMN_HEADERS = [
-  'file_name',
-  'latitude',
-  'longitude',
-  'altitude_m',
-  'captured_at',
-  'label_count',
-  'labels',
-  'label_ids',
-  'first_analyzed_at',
-  'updated_at',
-  'photo_key',
-] as const
+/** The columns that precede the per-label ones, in this order. */
+const FIXED_COLUMN_HEADERS = ['file_name', 'latitude', 'longitude', 'captured_at'] as const
+
+const LABEL_PRESENT_VALUE = 'si'
+const LABEL_ABSENT_VALUE = 'no'
 
 /**
  * A field is quoted whenever it contains a separator, a quote or a newline — and
@@ -48,26 +48,34 @@ function formatCoordinate(degrees: number | null): string {
   return degrees === null ? '' : degrees.toFixed(COORDINATE_DECIMAL_PLACES)
 }
 
-function buildCsvRow(
-  annotation: PhotoAnnotation,
-  labelNamesById: ReadonlyMap<string, string>,
-): string {
-  const labelNames = annotation.labelIds.map(labelId => labelNamesById.get(labelId) ?? labelId)
+/**
+ * Column headers for the label catalogue, in catalogue order.
+ *
+ * The labeller refuses to create two labels with the same name, but the store is
+ * read back from `localStorage`, which anything could have written; a repeated
+ * name would produce two identical headers and a spreadsheet would silently read
+ * only one of them. Repeats are suffixed instead, so every column stays
+ * addressable.
+ */
+function buildLabelColumnHeaders(labels: readonly LabelDefinition[]): string[] {
+  const timesHeaderUsed = new Map<string, number>()
+
+  return labels.map(label => {
+    const previousUses = timesHeaderUsed.get(label.name) ?? 0
+    timesHeaderUsed.set(label.name, previousUses + 1)
+    return previousUses === 0 ? label.name : `${label.name} (${previousUses + 1})`
+  })
+}
+
+function buildCsvRow(annotation: PhotoAnnotation, labels: readonly LabelDefinition[]): string {
+  const appliedLabelIds = new Set(annotation.labelIds)
 
   return [
     annotation.fileName,
     formatCoordinate(annotation.latitudeDegrees),
     formatCoordinate(annotation.longitudeDegrees),
-    annotation.altitudeMeters === null ? '' : annotation.altitudeMeters.toFixed(1),
     annotation.capturedAt ?? '',
-    String(annotation.labelIds.length),
-    // One cell per photo rather than one row per label: the survey is read as
-    // "this point, these labels", and a spreadsheet splits the cell easily.
-    labelNames.join('; '),
-    annotation.labelIds.join('; '),
-    annotation.firstAnalyzedAt,
-    annotation.updatedAt,
-    annotation.photoKey,
+    ...labels.map(label => (appliedLabelIds.has(label.id) ? LABEL_PRESENT_VALUE : LABEL_ABSENT_VALUE)),
   ]
     .map(formatCsvField)
     .join(CSV_FIELD_SEPARATOR)
@@ -88,13 +96,14 @@ function compareAnnotationsByCaptureTime(first: PhotoAnnotation, second: PhotoAn
 }
 
 export function buildAnnotationsCsv(database: AnnotationDatabase): string {
-  const labelNamesById = new Map(database.labels.map(label => [label.id, label.name]))
+  const labels = database.labels
   const annotations = Object.values(database.annotationsByPhotoKey).sort(compareAnnotationsByCaptureTime)
 
-  const lines = [
-    CSV_COLUMN_HEADERS.join(CSV_FIELD_SEPARATOR),
-    ...annotations.map(annotation => buildCsvRow(annotation, labelNamesById)),
-  ]
+  const headerLine = [...FIXED_COLUMN_HEADERS, ...buildLabelColumnHeaders(labels)]
+    .map(formatCsvField)
+    .join(CSV_FIELD_SEPARATOR)
+
+  const lines = [headerLine, ...annotations.map(annotation => buildCsvRow(annotation, labels))]
 
   return UTF8_BYTE_ORDER_MARK + lines.join(CSV_LINE_SEPARATOR) + CSV_LINE_SEPARATOR
 }
