@@ -773,6 +773,127 @@
   text-overflow: ellipsis;
 }
 
+/* ---------- Export dialog ---------- */
+
+/* See the note on `.gallery-dialog[open]`: an author `display` on the bare
+   element would keep a closed dialog on screen. */
+.export-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.export-dialog {
+  gap: 0.9rem;
+  width: min(34rem, 92vw);
+  max-height: 88dvh;
+  margin: auto;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  overflow-y: auto;
+}
+
+.export-dialog::backdrop {
+  background-color: var(--color-scrim);
+}
+
+.export-dialog__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.export-dialog__title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.export-dialog__close {
+  margin-left: auto;
+}
+
+/* The hint is a paragraph of prose, not the single line `.hint` is built for. */
+.export-dialog__map-hint {
+  align-items: flex-start;
+  line-height: 1.5;
+}
+
+/* Inside a line of prose the accent colour alone is not enough to read as a
+   link, and the hover that would underline it never happens on a phone. */
+.export-dialog__map-hint .page-link {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.export-dialog__map-hint code {
+  padding: 0 0.2rem;
+  border-radius: 0.2rem;
+  font-size: 0.8rem;
+  background-color: rgb(91 104 118 / 18%);
+}
+
+.export-dialog__filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+}
+
+.export-dialog__legend {
+  padding: 0 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.export-dialog__note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* The chips here wrap a hidden checkbox, so the focus ring has to come from the
+   input's state rather than from the label's own :focus-visible. */
+.export-dialog .chip:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.export-dialog__modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+}
+
+.export-dialog__mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.export-dialog__warning {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-danger);
+  font-variant-numeric: tabular-nums;
+}
+
+.export-dialog__footer {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* The download is the point of the dialog, so it takes the width left over. */
+.export-dialog__download {
+  flex: 1;
+}
+
 /* ---------- Drag and drop ---------- */
 
 .labeler--dropping {

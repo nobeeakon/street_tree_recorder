@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent } from 'react'
 import { Link } from 'react-router'
 import './LabelerPage.css'
+import { ExportCsvDialog } from '../components/labeler/ExportCsvDialog'
 import { LabelManagerPanel } from '../components/labeler/LabelManagerPanel'
 import { PhotoFullScreenDialog } from '../components/labeler/PhotoFullScreenDialog'
 import { PhotoGalleryDialog } from '../components/labeler/PhotoGalleryDialog'
@@ -9,6 +10,7 @@ import { PhotoViewer } from '../components/labeler/PhotoViewer'
 import { useAnnotationStore } from '../hooks/useAnnotationStore'
 import { usePhotoGallery } from '../hooks/usePhotoGallery'
 import { buildAnnotationsCsv, buildAnnotationsCsvFileName } from '../lib/annotationCsv'
+import type { AnnotationLabelFilter } from '../lib/annotationCsv'
 import { downloadBlobAsFile } from '../lib/capture'
 import { MAXIMUM_KEYBOARD_SHORTCUT_LABELS } from '../lib/labelShortcuts'
 import { toPhotoRegistration } from '../lib/photoLibrary'
@@ -34,6 +36,7 @@ export function LabelerPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isDraggingFiles, setIsDraggingFiles] = useState(false)
   const [isGalleryDialogOpen, setIsGalleryDialogOpen] = useState(false)
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [isFullScreenOpen, setIsFullScreenOpen] = useState(false)
 
   const {
@@ -96,14 +99,25 @@ export function LabelerPage() {
   }, [])
 
   const closeGalleryDialog = useCallback(() => setIsGalleryDialogOpen(false), [])
+  const closeExportDialog = useCallback(() => setIsExportDialogOpen(false), [])
   const openFullScreen = useCallback(() => setIsFullScreenOpen(true), [])
   const closeFullScreen = useCallback(() => setIsFullScreenOpen(false), [])
 
-  const handleExportCsv = useCallback(() => {
-    const csvContent = buildAnnotationsCsv(store.database)
-    const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
-    downloadBlobAsFile(csvBlob, buildAnnotationsCsvFileName(new Date()))
-  }, [store.database])
+  /** The dialog decides what goes in the file; the page only writes it out. */
+  const handleExportCsv = useCallback(
+    (filter: AnnotationLabelFilter) => {
+      const csvContent = buildAnnotationsCsv(store.database, filter)
+      const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
+      const isFiltered = filter.selectedLabelIds.length > 0
+      downloadBlobAsFile(csvBlob, buildAnnotationsCsvFileName(new Date(), isFiltered))
+    },
+    [store.database],
+  )
+
+  const storedAnnotations = useMemo(
+    () => Object.values(store.annotationsByPhotoKey),
+    [store.annotationsByPhotoKey],
+  )
 
   const handleClearAllData = useCallback(() => {
     const confirmationMessage =
@@ -127,9 +141,10 @@ export function LabelerPage() {
         return
       }
 
-      // The gallery is modal: while it is open the keys belong to it, not to the
-      // photo hidden behind it. Esc closing the dialog must not also tag anything.
-      if (isGalleryDialogOpen) {
+      // The gallery and the export dialog are modal: while one is open the keys
+      // belong to it, not to the photo hidden behind it. Esc closing a dialog
+      // must not also tag anything.
+      if (isGalleryDialogOpen || isExportDialogOpen) {
         return
       }
 
@@ -168,6 +183,7 @@ export function LabelerPage() {
   }, [
     goToNextPhoto,
     goToPreviousPhoto,
+    isExportDialogOpen,
     isGalleryDialogOpen,
     labels,
     selectedPhoto,
@@ -234,9 +250,9 @@ export function LabelerPage() {
           <button
             type="button"
             className="button button--compact button--secondary"
-            onClick={handleExportCsv}
+            onClick={() => setIsExportDialogOpen(true)}
             disabled={store.storedPhotoCount === 0}
-            title="Descarga coordenadas y etiquetas de todas las fotos guardadas"
+            title="Descarga coordenadas y etiquetas, con o sin filtro de etiquetas"
           >
             Exportar CSV
           </button>
@@ -326,6 +342,14 @@ export function LabelerPage() {
         selectedPhotoIndex={selectedPhotoIndex}
         onSelectPhotoAtIndex={selectPhotoAtIndex}
         onClose={closeGalleryDialog}
+      />
+
+      <ExportCsvDialog
+        isOpen={isExportDialogOpen}
+        labels={labels}
+        annotations={storedAnnotations}
+        onExport={handleExportCsv}
+        onClose={closeExportDialog}
       />
 
       <PhotoFullScreenDialog

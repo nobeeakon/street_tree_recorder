@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { BrowserNoticeDialog } from '../components/BrowserNoticeDialog'
+import { LocationUnavailableDialog } from '../components/LocationUnavailableDialog'
 import { useCamera } from '../hooks/useCamera'
 import { useDistanceRecorder } from '../hooks/useDistanceRecorder'
 import type { CapturePosition } from '../hooks/useDistanceRecorder'
@@ -72,8 +73,10 @@ export function RecorderPage() {
     positionAccuracyMeters,
     statusMessage,
     errorMessage,
+    locationProblem,
     startRecording,
     stopRecording,
+    dismissLocationProblem,
   } = useDistanceRecorder(recorderOptions)
 
   const handleToggleRecording = useCallback(() => {
@@ -84,6 +87,15 @@ export function RecorderPage() {
     }
   }, [isRecording, startRecording, stopRecording])
 
+  // Retrying means asking for the permission again, which only a fresh watch
+  // does. Stopping first covers the errors that leave the old watch running —
+  // startRecording() would otherwise see it and return without doing anything.
+  const handleRetryLocation = useCallback(() => {
+    dismissLocationProblem()
+    stopRecording()
+    void startRecording()
+  }, [dismissLocationProblem, startRecording, stopRecording])
+
   const progressFraction =
     metersSinceLastPhoto === null
       ? 0
@@ -92,6 +104,13 @@ export function RecorderPage() {
   return (
     <main className="app">
       <BrowserNoticeDialog />
+
+      <LocationUnavailableDialog
+        problem={locationProblem}
+        isRecording={isRecording}
+        onRetry={handleRetryLocation}
+        onDismiss={dismissLocationProblem}
+      />
 
       <div className="viewfinder">
         <video

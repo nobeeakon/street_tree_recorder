@@ -22,6 +22,27 @@ export interface DistanceRecorderOptions {
   onCapturePosition: (position: CapturePosition) => Promise<void>
 }
 
+/**
+ * Why the recording cannot get a position. Kept apart from `errorMessage` — a
+ * failure to save one photo is a note at the bottom of the screen, but a walk
+ * with no GPS at all takes no photos whatsoever, and that has to interrupt.
+ */
+export type LocationProblemKind =
+  /** The browser has no Geolocation API, so nothing will ever fix this. */
+  | 'geolocation-unsupported'
+  /** The user, or the operating system, refused access to the position. */
+  | 'permission-denied'
+  /** The watch is running but no usable fix has arrived yet. */
+  | 'no-signal'
+  /** Anything the browser reports that does not fall in the cases above. */
+  | 'unknown-error'
+
+export interface LocationProblem {
+  kind: LocationProblemKind
+  /** The browser's own wording; only worth showing for `unknown-error`. */
+  browserMessage: string | null
+}
+
 export interface DistanceRecorder {
   isRecording: boolean
   photoCount: number
@@ -29,8 +50,11 @@ export interface DistanceRecorder {
   positionAccuracyMeters: number | null
   statusMessage: string
   errorMessage: string | null
+  /** Non-null while the recording has no position to work with. */
+  locationProblem: LocationProblem | null
   startRecording: () => Promise<void>
   stopRecording: () => void
+  dismissLocationProblem: () => void
 }
 
 const GEOLOCATION_OPTIONS: PositionOptions = {
@@ -62,10 +86,14 @@ export function useDistanceRecorder(options: DistanceRecorderOptions): DistanceR
   const [positionAccuracyMeters, setPositionAccuracyMeters] = useState<number | null>(null)
   const [statusMessage, setStatusMessage] = useState('Listo.')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [locationProblem, setLocationProblem] = useState<LocationProblem | null>(null)
 
   const geolocationWatchIdRef = useRef<number | null>(null)
   const lastCapturedCoordinatesRef = useRef<GeographicCoordinates | null>(null)
   const isCaptureInFlightRef = useRef(false)
+  // A dropout after the first fix is a hiccup worth only a status line; never
+  // having had a fix at all is what the walker needs to be interrupted about.
+  const hasReceivedPositionFixRef = useRef(false)
   const wakeLockSentinelRef = useRef<WakeLockSentinelLike | null>(null)
 
   // Latest options are read through a ref so that changing the interval, or
@@ -115,19 +143,27 @@ export function useDistanceRecorder(options: DistanceRecorderOptions): DistanceR
     (error: GeolocationPositionError) => {
       switch (error.code) {
         case error.PERMISSION_DENIED:
-          setErrorMessage(
-            'Permiso de ubicación denegado. La grabación necesita GPS para saber cuándo disparar.',
-          )
+          // Without permission the watch will never report anything, so the
+          // recording is over rather than merely waiting.
+          setLocationProblem({ kind: 'permission-denied', browserMessage: null })
           stopRecording()
           break
         case error.POSITION_UNAVAILABLE:
           setStatusMessage('Todavía sin señal GPS — esperando una posición…')
+          // The watch stays alive: the fix may still arrive, indoors or in a
+          // tunnel it just will not arrive yet.
+          if (!hasReceivedPositionFixRef.current) {
+            setLocationProblem({ kind: 'no-signal', browserMessage: null })
+          }
           break
         case error.TIMEOUT:
           setStatusMessage('El GPS tarda en responder — seguimos esperando…')
+          if (!hasReceivedPositionFixRef.current) {
+            setLocationProblem({ kind: 'no-signal', browserMessage: null })
+          }
           break
         default:
-          setErrorMessage(`Error de ubicación: ${error.message}`)
+          setLocationProblem({ kind: 'unknown-error', browserMessage: error.message })
       }
     },
     [stopRecording],
@@ -137,6 +173,10 @@ export function useDistanceRecorder(options: DistanceRecorderOptions): DistanceR
     const { latitude, longitude, accuracy, altitude } = position.coords
     const { captureIntervalMeters, maximumAcceptableAccuracyMeters } = optionsRef.current
 
+    // Any fix at all means there *is* a location: an open dialog about the
+    // missing one has been answered by the GPS itself and can go away.
+    hasReceivedPositionFixRef.current = true
+    setLocationProblem(null)
     setPositionAccuracyMeters(accuracy)
 
     // A weak fix can wander hundreds of metres while standing still, which would
@@ -200,16 +240,16 @@ export function useDistanceRecorder(options: DistanceRecorderOptions): DistanceR
       return
     }
     if (!('geolocation' in navigator)) {
-      setErrorMessage(
-        'Este navegador no tiene la API de geolocalización, así que no se puede medir la distancia.',
-      )
+      setLocationProblem({ kind: 'geolocation-unsupported', browserMessage: null })
       return
     }
 
     lastCapturedCoordinatesRef.current = null
+    hasReceivedPositionFixRef.current = false
     setPhotoCount(0)
     setMetersSinceLastPhoto(null)
     setErrorMessage(null)
+    setLocationProblem(null)
     setStatusMessage('Esperando posición GPS…')
 
     await requestWakeLock()
@@ -221,6 +261,12 @@ export function useDistanceRecorder(options: DistanceRecorderOptions): DistanceR
     )
     setIsRecording(true)
   }, [handlePosition, handlePositionError, requestWakeLock])
+
+  /**
+   * Closes the dialog while leaving the recording as it is: for a lost signal
+   * that means carrying on waiting for the fix that has not arrived yet.
+   */
+  const dismissLocationProblem = useCallback(() => setLocationProblem(null), [])
 
   // Never leave a watch or a wake lock behind when the app closes. The guard
   // keeps React's development double-mount from reporting a stop that never
@@ -240,7 +286,9 @@ export function useDistanceRecorder(options: DistanceRecorderOptions): DistanceR
     positionAccuracyMeters,
     statusMessage,
     errorMessage,
+    locationProblem,
     startRecording,
     stopRecording,
+    dismissLocationProblem,
   }
 }

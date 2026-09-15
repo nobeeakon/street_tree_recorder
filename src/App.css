@@ -312,6 +312,28 @@
   width: 100%;
 }
 
+/* ---------- Missing location ---------- */
+
+/* The browser's own error text, secondary to the explanation above it. */
+.notice__detail {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/*
+ * Two thumb-sized buttons, side by side when they fit. The retry button is
+ * last so it sits under the writing hand on a phone.
+ */
+.notice__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.notice__actions .button {
+  flex: 1 1 8rem;
+}
+
 /* The canvas only exists to encode frames; it is never shown. */
 .capture-canvas {
   display: none;
