@@ -21,7 +21,7 @@ export function HomePage() {
         <header className="home__header">
           <h1 className="home__title">Street Recorder</h1>
           <p className="home__lead">
-            Una herramienta para inventariar la calle: se fotografía caminando con el celular y se
+            Una herramienta para inventariar la calle desde tu coche: se fotografía caminando con el celular y se
             etiqueta después en la computadora.
           </p>
         </header>
@@ -33,7 +33,7 @@ export function HomePage() {
             </span>
             <span className="entry__text">
               <span className="entry__name">Grabar fotos</span>
-              <span className="entry__where">En el celular, caminando por la calle</span>
+              <span className="entry__where">Desde el celular, circulando por la calle</span>
             </span>
             <span className="entry__arrow" aria-hidden="true">
               →
