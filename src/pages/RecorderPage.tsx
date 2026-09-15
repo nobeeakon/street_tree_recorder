@@ -31,6 +31,13 @@ export function RecorderPage() {
   const [captureIntervalMeters, setCaptureIntervalMeters] = useState<number>(
     DEFAULT_CAPTURE_INTERVAL_METERS,
   )
+  /**
+   * The interval picker and the links to the other pages fold away behind one
+   * summary row. On a phone held upright they are the difference between a
+   * viewfinder that fills the screen and one squeezed into the top half, and
+   * they are only touched between walks.
+   */
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(true)
 
   const capturePositionAsPhoto = useCallback(
     async (position: CapturePosition) => {
@@ -83,9 +90,17 @@ export function RecorderPage() {
     if (isRecording) {
       stopRecording()
     } else {
+      // Once the walk starts the settings have been chosen; the screen is worth
+      // more as viewfinder than as a panel of things nobody is about to change.
+      setIsSettingsExpanded(false)
       void startRecording()
     }
   }, [isRecording, startRecording, stopRecording])
+
+  const toggleSettings = useCallback(
+    () => setIsSettingsExpanded(currentlyExpanded => !currentlyExpanded),
+    [],
+  )
 
   // Retrying means asking for the permission again, which only a fresh watch
   // does. Stopping first covers the errors that leave the old watch running —
@@ -148,9 +163,26 @@ export function RecorderPage() {
         {isRecording && <div className="recording-dot" aria-label="Grabando" />}
       </div>
 
-      <section className="controls">
-        <fieldset className="interval">
-          <legend className="interval__legend">Una foto cada</legend>
+      <section className={`controls ${isSettingsExpanded ? '' : 'controls--collapsed'}`}>
+        {/* The summary doubles as the reading of the setting it hides, so the
+            collapsed panel still answers "how often is this shooting?". */}
+        <button
+          type="button"
+          className="controls__summary"
+          onClick={toggleSettings}
+          aria-expanded={isSettingsExpanded}
+          aria-controls="recorder-settings recorder-links"
+        >
+          <span className="controls__summary-text">
+            Una foto cada <strong>{captureIntervalMeters} m</strong>
+          </span>
+          <span className="controls__summary-chevron" aria-hidden="true">
+            ▲
+          </span>
+        </button>
+
+        <fieldset className="interval" id="recorder-settings">
+          <legend className="interval__legend">Distancia entre fotos</legend>
           <div className="interval__options">
             {CAPTURE_INTERVAL_OPTIONS_METERS.map(optionMeters => (
               <label
@@ -199,7 +231,7 @@ export function RecorderPage() {
 
         {/* The other pages are not part of the walk — the labeller is meant for
             a computer — so they get a link rather than a place in the walking UI. */}
-        <nav className="controls__links">
+        <nav className="controls__links" id="recorder-links">
           <Link className="page-link" to={APP_ROUTE_PATHS.labeler}>
             Etiquetar fotos en la computadora →
           </Link>

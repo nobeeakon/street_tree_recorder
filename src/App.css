@@ -106,6 +106,61 @@
   border-top: 1px solid var(--color-border);
 }
 
+/*
+ * The settings fold away behind this row. On a phone held upright the interval
+ * picker and the page links push the viewfinder into the top half of the
+ * screen, and they are both things chosen before setting off rather than
+ * during the walk — so the row states the interval it hides, and the readout
+ * and the record button stay out where a thumb can reach them.
+ */
+.controls__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  /* Thumb-sized like the other controls; this one gets tapped mid-walk. */
+  min-height: 2.5rem;
+  padding: 0.45rem 0.8rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  background-color: var(--color-border);
+  cursor: pointer;
+  text-align: left;
+}
+
+.controls__summary-text strong {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.controls__summary-chevron {
+  display: inline-block;
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  transition: transform 150ms ease-out;
+}
+
+/* Pointing up means "fold this away"; upside down, "bring it back". */
+.controls--collapsed .controls__summary-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .controls__summary-chevron {
+    transition: none;
+  }
+}
+
+/* display:none rather than a height animation: it also takes the radios and
+   the links out of the tab order, which a merely invisible panel would not. */
+.controls--collapsed .interval,
+.controls--collapsed .controls__links {
+  display: none;
+}
+
 /* ---------- Capture interval ---------- */
 
 .interval {
