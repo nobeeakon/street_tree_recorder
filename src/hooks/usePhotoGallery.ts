@@ -47,7 +47,7 @@ function buildLoadSummary(
 ): string | null {
   const parts: string[] = []
   if (addedCount > 0) {
-    parts.push(`${addedCount} ${addedCount === 1 ? 'foto añadida' : 'fotos añadidas'}`)
+    parts.push(`${addedCount} ${addedCount === 1 ? 'foto agregada' : 'fotos agregadas'}`)
   }
   if (duplicateCount > 0) {
     parts.push(`${duplicateCount} ${duplicateCount === 1 ? 'repetida' : 'repetidas'} (ya estaban en la galería)`)
@@ -89,7 +89,7 @@ export function usePhotoGallery(): PhotoGalleryController {
     // does not cover; two overlapping reads would each miss the other's photos
     // when checking for duplicates.
     if (isLoadingRef.current) {
-      setGalleryNoticeMessage('Espera a que termine la carga en curso antes de añadir más fotos.')
+      setGalleryNoticeMessage('Espera a que termine la carga en curso antes de agregar más fotos.')
       return []
     }
 
@@ -125,7 +125,7 @@ export function usePhotoGallery(): PhotoGalleryController {
           addedPhotos.push(photo)
         }
       } catch (loadError) {
-        failureMessages.push(loadError instanceof Error ? loadError.message : `No se ha podido leer «${file.name}».`)
+        failureMessages.push(loadError instanceof Error ? loadError.message : `No se pudo leer “${file.name}”.`)
       }
       setLoadingProgress({ loadedCount: fileIndex + 1, totalCount: imageFiles.length })
     }

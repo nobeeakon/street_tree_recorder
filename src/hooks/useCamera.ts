@@ -28,16 +28,16 @@ function describeCameraFailure(error: unknown): string {
   if (error instanceof DOMException) {
     switch (error.name) {
       case 'NotAllowedError':
-        return 'Permiso de cámara denegado. Actívalo en los ajustes del sitio e inténtalo de nuevo.'
+        return 'Permiso de cámara denegado. Actívalo en la configuración del sitio e inténtalo de nuevo.'
       case 'NotFoundError':
-        return 'No se ha encontrado ninguna cámara en este dispositivo.'
+        return 'No se encontró ninguna cámara en este dispositivo.'
       case 'NotReadableError':
         return 'La cámara ya la está usando otra aplicación.'
       default:
-        return `No se ha podido iniciar la cámara (${error.name}).`
+        return `No se pudo iniciar la cámara (${error.name}).`
     }
   }
-  return error instanceof Error ? error.message : 'No se ha podido iniciar la cámara.'
+  return error instanceof Error ? error.message : 'No se pudo iniciar la cámara.'
 }
 
 export function useCamera(): CameraController {

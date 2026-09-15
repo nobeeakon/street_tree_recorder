@@ -86,7 +86,7 @@ export async function loadPhotoFromFile(file: File): Promise<LoadedPhoto> {
     fileBytes = new Uint8Array(await file.arrayBuffer())
   } catch (readError) {
     throw new PhotoLoadError(
-      `No se ha podido leer «${file.name}»: ${readError instanceof Error ? readError.message : 'motivo desconocido'}.`,
+      `No se pudo leer “${file.name}”: ${readError instanceof Error ? readError.message : 'motivo desconocido'}.`,
     )
   }
 

@@ -1,0 +1,143 @@
+/*
+ * The front door. It is opened on the phone the recorder runs on and on the
+ * computer the labeller runs on, so it is a single measured column that
+ * scrolls, with nothing pinned to the viewport.
+ */
+
+.home {
+  min-height: 100dvh;
+  padding: 2rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.home__content {
+  /* Around 70 characters per line, which is where prose stays readable. */
+  max-width: 38rem;
+  margin: 0 auto;
+}
+
+.home__header {
+  margin-bottom: 1.75rem;
+}
+
+.home__title {
+  margin: 0 0 0.6rem;
+  font-size: 1.5rem;
+}
+
+.home__lead {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* ---------- The way into each half ---------- */
+
+/*
+ * These are the point of the page, so they are cards rather than links: a
+ * thumb-sized target on the phone, and impossible to miss above the prose that
+ * explains which one to press.
+ */
+.home__entries {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 2.25rem;
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  /* Comfortable for a thumb, and the same height as the recorder's button. */
+  min-height: 3.75rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  text-decoration: none;
+}
+
+.entry:hover,
+.entry:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.entry__icon {
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  color: var(--color-accent);
+}
+
+.entry__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.entry__name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.entry__where {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.entry__arrow {
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+.entry:hover .entry__arrow,
+.entry:focus-visible .entry__arrow {
+  color: var(--color-accent);
+}
+
+/* ---------- The explanation ---------- */
+
+.home__section {
+  margin-bottom: 1.75rem;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.home__section-title {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  color: var(--color-accent);
+}
+
+.home__definitions {
+  margin: 0;
+}
+
+.home__definitions dt {
+  font-weight: 600;
+}
+
+.home__definitions dd {
+  margin: 0.2rem 0 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.home__definitions dd:last-child {
+  margin-bottom: 0;
+}
+
+.home__footer {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.home__source {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}

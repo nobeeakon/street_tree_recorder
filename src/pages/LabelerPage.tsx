@@ -104,7 +104,7 @@ export function LabelerPage() {
     const confirmationMessage =
       `Se borrarán ${store.labels.length} ${store.labels.length === 1 ? 'etiqueta' : 'etiquetas'} y ` +
       `los datos de ${store.storedPhotoCount} ${store.storedPhotoCount === 1 ? 'foto' : 'fotos'} de este navegador. ` +
-      'Esto no se puede deshacer: exporta el CSV antes si quieres conservarlo. ¿Seguir?'
+      'Esto no se puede deshacer: exporta el CSV antes si quieres conservarlo. ¿Continuar?'
 
     if (window.confirm(confirmationMessage)) {
       store.clearAllStoredData()
@@ -178,11 +178,11 @@ export function LabelerPage() {
         <div className="labeler__identity">
           <h1 className="labeler__title">Etiquetar fotos</h1>
           <nav className="labeler__navigation">
-            <Link className="page-link" to={APP_ROUTE_PATHS.recorder}>
-              ← Volver a grabar
+            <Link className="page-link" to={APP_ROUTE_PATHS.home}>
+              ← Inicio
             </Link>
-            <Link className="page-link" to={APP_ROUTE_PATHS.about}>
-              Acerca de
+            <Link className="page-link" to={APP_ROUTE_PATHS.recorder}>
+              Volver a grabar
             </Link>
           </nav>
         </div>
@@ -202,7 +202,7 @@ export function LabelerPage() {
             onClick={() => fileInputRef.current?.click()}
             disabled={loadingProgress !== null}
           >
-            {loadingProgress === null ? 'Añadir fotos' : 'Leyendo…'}
+            {loadingProgress === null ? 'Agregar fotos' : 'Leyendo…'}
           </button>
           <button
             type="button"
@@ -299,7 +299,7 @@ export function LabelerPage() {
       />
 
       <p className="labeler__footnote">
-        Las fotos se leen en este ordenador y no salen de él. Las etiquetas y las coordenadas se
+        Las fotos se leen en esta computadora y no salen de ella. Las etiquetas y las coordenadas se
         guardan en este navegador, así que al volver a abrir una foto ya analizada aparecerán sus
         etiquetas. La galería, en cambio, se vacía al recargar la página.
       </p>

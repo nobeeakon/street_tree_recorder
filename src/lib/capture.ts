@@ -27,7 +27,7 @@ export function captureVideoFrameAsJpeg(
   const frameWidth = videoElement.videoWidth
   const frameHeight = videoElement.videoHeight
   if (frameWidth === 0 || frameHeight === 0) {
-    throw new FrameCaptureError('La cámara todavía no ha producido ningún fotograma.')
+    throw new FrameCaptureError('La cámara todavía no produce ningún fotograma.')
   }
 
   canvasElement.width = frameWidth
@@ -35,7 +35,7 @@ export function captureVideoFrameAsJpeg(
 
   const drawingContext = canvasElement.getContext('2d')
   if (!drawingContext) {
-    throw new FrameCaptureError('No se ha podido obtener el contexto de dibujo 2D del canvas.')
+    throw new FrameCaptureError('No se pudo obtener el contexto de dibujo 2D del canvas.')
   }
   drawingContext.drawImage(videoElement, 0, 0, frameWidth, frameHeight)
 

@@ -178,15 +178,14 @@ export function RecorderPage() {
           {isRecording ? 'Detener grabación' : 'Empezar grabación'}
         </button>
 
-        {/* The other pages are not part of the walk: the labeller is meant for a
-            computer and the about page is read once, so both get a link rather
-            than a place in the walking UI. */}
+        {/* The other pages are not part of the walk — the labeller is meant for
+            a computer — so they get a link rather than a place in the walking UI. */}
         <nav className="controls__links">
           <Link className="page-link" to={APP_ROUTE_PATHS.labeler}>
-            Etiquetar fotos en el ordenador →
+            Etiquetar fotos en la computadora →
           </Link>
-          <Link className="page-link" to={APP_ROUTE_PATHS.about}>
-            Acerca de
+          <Link className="page-link" to={APP_ROUTE_PATHS.home}>
+            ← Inicio
           </Link>
         </nav>
       </section>

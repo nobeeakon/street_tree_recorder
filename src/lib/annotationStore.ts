@@ -267,7 +267,7 @@ export function addLabelToDatabase(
     throw new AnnotationStoreError('La etiqueta necesita un nombre.')
   }
   if (findLabelByName(database, trimmedName)) {
-    throw new AnnotationStoreError(`Ya existe una etiqueta llamada «${trimmedName}».`)
+    throw new AnnotationStoreError(`Ya existe una etiqueta llamada “${trimmedName}”.`)
   }
 
   const newLabel: LabelDefinition = {
@@ -292,7 +292,7 @@ export function renameLabelInDatabase(
 
   const clashingLabel = findLabelByName(database, trimmedName)
   if (clashingLabel && clashingLabel.id !== labelId) {
-    throw new AnnotationStoreError(`Ya existe una etiqueta llamada «${trimmedName}».`)
+    throw new AnnotationStoreError(`Ya existe una etiqueta llamada “${trimmedName}”.`)
   }
 
   return {
@@ -376,7 +376,7 @@ export function toggleLabelOnPhotoInDatabase(
 ): AnnotationDatabase {
   const annotation = database.annotationsByPhotoKey[photoKey]
   if (!annotation) {
-    throw new AnnotationStoreError('La foto no está registrada, así que no se le puede etiquetar.')
+    throw new AnnotationStoreError('La foto no está registrada, así que no se puede etiquetar.')
   }
   if (!database.labels.some(label => label.id === labelId)) {
     throw new AnnotationStoreError('Esa etiqueta ya no existe.')

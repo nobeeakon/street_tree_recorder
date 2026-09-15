@@ -187,7 +187,7 @@ export function useDistanceRecorder(options: DistanceRecorderOptions): DistanceR
         setErrorMessage(null)
       } catch (captureError) {
         setErrorMessage(
-          captureError instanceof Error ? captureError.message : 'No se ha podido guardar la foto.',
+          captureError instanceof Error ? captureError.message : 'No se pudo guardar la foto.',
         )
       } finally {
         isCaptureInFlightRef.current = false

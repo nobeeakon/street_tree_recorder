@@ -9,7 +9,7 @@ import type { GeographicCoordinates } from './geo'
 /** Six decimals is ~0.11 m: the precision the recorder stores. */
 const COORDINATE_DECIMAL_PLACES = 6
 
-const SPANISH_LOCALE = 'es-ES'
+const SPANISH_LOCALE = 'es-MX'
 
 const dateTimeFormatter = new Intl.DateTimeFormat(SPANISH_LOCALE, {
   dateStyle: 'medium',

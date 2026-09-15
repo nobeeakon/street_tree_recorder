@@ -478,7 +478,7 @@ export async function addGpsExifToJpeg(
     originalBytes[0] !== JPEG_MARKER_PREFIX ||
     originalBytes[1] !== JPEG_MARKER_START_OF_IMAGE
   ) {
-    throw new ExifWriteError('El fotograma codificado no es un JPEG, así que no se le puede añadir Exif.')
+    throw new ExifWriteError('El fotograma codificado no es un JPEG, así que no se le puede agregar Exif.')
   }
 
   const app1SegmentBytes = buildExifApp1Segment(metadata)

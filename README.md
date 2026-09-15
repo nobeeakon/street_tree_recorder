@@ -2,15 +2,17 @@
 
 One survey, two halves:
 
-- **Recorder** (`#/`) — takes a photo through the rear camera at a set distance
-  travelled and saves each one to the device, named after the coordinates where
-  it was taken and geotagged with them in EXIF. For a **phone**.
+- **Recorder** (`#/grabar`) — takes a photo through the rear camera at a set
+  distance travelled and saves each one to the device, named after the
+  coordinates where it was taken and geotagged with them in EXIF. For a
+  **phone**.
 - **Labeller** (`#/etiquetar`) — loads those photos back, tags each one from a
   persistent label catalogue and exports coordinates plus labels as CSV. For a
   **computer**.
 
-There is also a short **about** page (`#/acerca-de`) describing those two halves
-for whoever opens the link cold.
+The home page (`#/`) is neither: it says what the app is and offers the two as a
+pair of cards. The address gets opened cold, on a phone or on a laptop, and only
+the reader knows which half they are there for.
 
 Routing is React Router in hash mode: GitHub Pages is a static host with no
 rewrite rule, so `/etiquetar` would come back as a 404 while `#/etiquetar` is
@@ -39,7 +41,8 @@ wants a secure context.
 
 ## Recording, on the phone
 
-The interface is in Spanish; code, comments and this document are in English.
+The interface is in Mexican Spanish — *celular*, *computadora*, *agregar*, and
+`es-MX` for dates and numbers. Code, comments and this document are in English.
 
 The distance between photos is picked in the UI — **10, 25, 50, 100 or 200 m**,
 25 m by default. Changing it mid-walk takes effect at the next GPS fix; there is
@@ -56,11 +59,11 @@ in [src/pages/RecorderPage.tsx](src/pages/RecorderPage.tsx).
 
 ## Labelling, on the computer
 
-Open `#/etiquetar` (or follow **Etiquetar fotos en el ordenador** at the bottom
-of the recorder). Copy the photos off the phone first; the page reads them from
-the local disk and uploads nothing.
+Press **Etiquetar fotos** on the home page, or open `#/etiquetar` directly. Copy
+the photos off the phone first; the page reads them from the local disk and
+uploads nothing.
 
-1. **Añadir fotos**, or drag a folder's worth onto the page. Each file is read
+1. **Agregar fotos**, or drag a folder's worth onto the page. Each file is read
    once: its coordinates and capture time come out of the EXIF the recorder
    wrote, and its bytes are hashed into the identity its labels hang off.
 2. Create the labels you need in the right-hand panel. They are saved in the
@@ -122,7 +125,7 @@ plain `http://` LAN address.
 | [src/hooks/useCamera.ts](src/hooks/useCamera.ts) | Rear-camera stream lifecycle |
 | [src/hooks/useDistanceRecorder.ts](src/hooks/useDistanceRecorder.ts) | Watches GPS, decides when a photo is due |
 | [src/pages/RecorderPage.tsx](src/pages/RecorderPage.tsx) | Viewfinder, counter, interval selector, start/stop |
-| [src/pages/AboutPage.tsx](src/pages/AboutPage.tsx) | What the app is, in Spanish; no state of its own |
+| [src/pages/HomePage.tsx](src/pages/HomePage.tsx) | What the app is and the way into each half; no state of its own |
 
 And, for the labelling half:
 

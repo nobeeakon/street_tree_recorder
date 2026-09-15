@@ -37,7 +37,7 @@ export function PhotoViewer({
     return (
       <section className="viewer viewer--empty">
         <p className="viewer__empty-message">
-          Selecciona fotos para empezar. Se leen en tu ordenador: no se sube nada a ningún sitio.
+          Selecciona fotos para empezar. Se leen en tu computadora: no se sube nada a ningún lado.
         </p>
       </section>
     )

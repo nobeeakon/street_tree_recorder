@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router'
 import './App.css'
 import { PageLoadingFallback } from './components/PageLoadingFallback'
-import { AboutPage } from './pages/AboutPage'
+import { HomePage } from './pages/HomePage'
 import { RecorderPage } from './pages/RecorderPage'
 import { APP_ROUTE_PATHS } from './routePaths'
 
@@ -33,11 +33,11 @@ function App() {
     <HashRouter>
       <Suspense fallback={<PageLoadingFallback />}>
         <Routes>
+          <Route path={APP_ROUTE_PATHS.home} element={<HomePage />} />
           <Route path={APP_ROUTE_PATHS.recorder} element={<RecorderPage />} />
           <Route path={APP_ROUTE_PATHS.labeler} element={<LabelerPage />} />
-          <Route path={APP_ROUTE_PATHS.about} element={<AboutPage />} />
-          {/* An old or mistyped fragment lands on the recorder, not a blank page. */}
-          <Route path="*" element={<Navigate to={APP_ROUTE_PATHS.recorder} replace />} />
+          {/* An old or mistyped fragment lands on the home page, not a blank one. */}
+          <Route path="*" element={<Navigate to={APP_ROUTE_PATHS.home} replace />} />
         </Routes>
       </Suspense>
     </HashRouter>

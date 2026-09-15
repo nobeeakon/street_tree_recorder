@@ -59,8 +59,8 @@ export function LabelManagerPanel({
       // in earlier sessions too — so the count goes in the question.
       const confirmationMessage =
         usageCount === 0
-          ? `¿Borrar la etiqueta «${label.name}»?`
-          : `«${label.name}» está en ${usageCount} ${usageCount === 1 ? 'foto' : 'fotos'}. Al borrarla desaparecerá de ${usageCount === 1 ? 'esa foto' : 'esas fotos'} y del CSV. ¿Seguir?`
+          ? `¿Borrar la etiqueta “${label.name}”?`
+          : `“${label.name}” está en ${usageCount} ${usageCount === 1 ? 'foto' : 'fotos'}. Al borrarla desaparecerá de ${usageCount === 1 ? 'esa foto' : 'esas fotos'} y del CSV. ¿Continuar?`
 
       if (window.confirm(confirmationMessage)) {
         onDeleteLabel(label.id)
@@ -86,7 +86,7 @@ export function LabelManagerPanel({
           maxLength={60}
         />
         <button type="submit" className="button button--compact" disabled={newLabelName.trim() === ''}>
-          Añadir
+          Agregar
         </button>
       </form>
 
